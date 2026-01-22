@@ -1,0 +1,90 @@
+# # This workflow deploys the application to GCP using Terraform and Ansible.
+# # It is commented out to prevent accidental triggering.
+# # To enable, uncomment the entire file.
+
+# name: Deploy to GCP
+
+# on:
+#   push:
+#     branches:
+#       - master
+#   workflow_dispatch: # Allows manual triggering
+
+# env:
+#   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+#   GCP_REGION: europe-west3
+#   GCP_ZONE: europe-west3-c
+#   SSH_USER: gcp-user
+#   REPO_URL: https://github.com/${{ github.repository }}
+
+# jobs:
+#   terraform:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       instance_ip: ${{ steps.get_ip.outputs.instance_ip }}
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v3
+
+#       - name: Authenticate to GCP
+#         uses: google-github-actions/auth@v1
+#         with:
+#           credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_wrapper: false # Use direct terraform commands
+
+#       - name: Terraform Init
+#         id: init
+#         run: terraform -chdir=terraform init -backend-config="bucket=${{ secrets.GCS_TF_STATE_BUCKET }}"
+
+#       - name: Terraform Apply
+#         id: apply
+#         run: |
+#           terraform -chdir=terraform apply -auto-approve \
+#             -var="gcp_project_id=${{ env.GCP_PROJECT_ID }}" \
+#             -var="gcp_region=${{ env.GCP_REGION }}" \
+#             -var="gcp_zone=${{ env.GCP_ZONE }}" \
+#             -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+#             -var="ssh_user=${{ env.SSH_USER }}" \
+#             -var="repo_url=${{ env.REPO_URL }}"
+
+#       - name: Get Instance IP
+#         id: get_ip
+#         run: echo "instance_ip=$(terraform -chdir=terraform output -raw instance_ip)" >> $GITHUB_OUTPUT
+
+#   ansible:
+#     runs-on: ubuntu-latest
+#     needs: terraform
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v3
+
+#       - name: Setup SSH Agent
+#         uses: webfactory/ssh-agent@v0.5.4
+#         with:
+#           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+#       - name: Install Ansible
+#         run: pip3 install ansible docker
+
+#       - name: Create Ansible Inventory
+#         run: |
+#           echo "[app_servers]" > inventory.ini
+#           echo "${{ needs.terraform.outputs.instance_ip }} ansible_user=${{ env.SSH_USER }} ansible_ssh_private_key_file=~/.ssh/id_rsa" >> inventory.ini
+#           cat inventory.ini
+
+#       - name: Wait for SSH to be ready
+#         run: |
+#           for i in $(seq 1 10); do
+#             ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ${{ env.SSH_USER }}@${{ needs.terraform.outputs.instance_ip }} exit 0 && break
+#             echo "Waiting for SSH on ${{ needs.terraform.outputs.instance_ip }} (attempt $i/10)..."
+#             sleep 10
+#           done
+
+#       - name: Run Ansible Playbook
+#         run: |
+#           ansible-playbook -i inventory.ini ansible/deploy.yml \
+#             --extra-vars "repo_url=${{ env.REPO_URL }}"

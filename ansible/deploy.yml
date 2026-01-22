@@ -1,0 +1,47 @@
+---
+- name: Deploy NestJS Application
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure /app directory exists
+      ansible.builtin.file:
+        path: /app
+        state: directory
+        mode: '0755'
+
+    - name: Clone or pull application repository
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: /app
+        version: master # Or specify a branch/tag
+        update: yes
+        force: yes # Force update in case of local changes
+
+    - name: Copy .env file (if needed, or handle securely)
+      ansible.builtin.copy:
+        content: |
+          POSTGRES_HOST=db
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=password
+          POSTGRES_DB=crm_db
+          # Add other environment variables as needed
+        dest: /app/.env
+        mode: '0644'
+      # Consider using Ansible Vault for sensitive environment variables
+
+    - name: Run docker-compose up
+      community.docker.docker_compose:
+        project_src: /app
+        build: yes
+        state: present
+      environment:
+        # Pass environment variables from .env or directly
+        POSTGRES_HOST: db
+        POSTGRES_PORT: 5432
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: password
+        POSTGRES_DB: crm_db
+      # This task will start the services defined in docker-compose.yml
+      # The 'build: yes' ensures images are rebuilt if necessary
+      # 'state: present' ensures the services are running
