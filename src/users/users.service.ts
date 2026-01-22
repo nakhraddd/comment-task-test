@@ -33,6 +33,10 @@ export class UsersService {
     return user;
   }
 
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ username });
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
     if (updateUserDto.password) {

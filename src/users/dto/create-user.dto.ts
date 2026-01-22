@@ -1,7 +1,12 @@
-import { IsString, IsOptional, IsUUID, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsUUID, IsIn, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
@@ -11,9 +16,4 @@ export class CreateUserDto {
   @IsString()
   @IsIn(['author', 'user'])
   role: string;
-
-  @ApiProperty({ required: false })
-  @IsUUID()
-  @IsOptional()
-  task_id?: string;
 }

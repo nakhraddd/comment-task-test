@@ -3,8 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CommentsModule } from './comments/comments.module';
+import { TasksModule } from './tasks/tasks.module';
 import { User } from './users/entities/user.entity';
 import { Comment } from './comments/entities/comment.entity';
+import { Task } from './tasks/entities/task.entity';
 
 @Module({
   imports: [
@@ -15,12 +17,13 @@ import { Comment } from './comments/entities/comment.entity';
       username: process.env.POSTGRES_USER || 'postgres',
       password: process.env.POSTGRES_PASSWORD || 'password',
       database: process.env.POSTGRES_DB || 'crm_db',
-      entities: [User, Comment],
+      entities: [User, Comment, Task],
       synchronize: true, // Don't use this in production
     }),
     UsersModule,
     AuthModule,
     CommentsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}
