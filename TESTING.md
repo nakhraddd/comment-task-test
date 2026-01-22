@@ -1,31 +1,33 @@
-# Testing Guide
+# Руководство по тестированию
 
-This guide provides example JSON payloads and expected response codes for testing the API endpoints. You can use tools like Postman, Insomnia, or `curl` to send these requests.
+Это руководство содержит примеры `JSON` и ожидаемые коды ответов для тестирования `endpoints` `API`. Вы можете использовать такие инструменты, как `Postman`, `Insomnia` или `curl` для отправки этих запросов.
 
-## Prerequisites
+## Предварительные требования
 
-1.  Ensure the application is running (`docker-compose up`).
-2.  The API is accessible at `http://localhost:3000`.
+1.  Убедитесь, что приложение запущено (`docker-compose up`).
+2.  `API` доступен по адресу `http://localhost:3000`.
 
-## HTTP Response Codes
+## Коды ответов `HTTP`
 
-*   **200 OK**: The request was successful (e.g., for `GET`, `PATCH`).
-*   **201 Created**: The resource was successfully created (e.g., for `POST`).
-*   **204 No Content**: The request was successful, but there is no content to return (e.g., for `DELETE`).
-*   **400 Bad Request**: The server cannot process the request due to a client error (e.g., invalid JSON, validation error).
-*   **401 Unauthorized**: The request requires authentication, and the client is not authenticated (e.g., missing or invalid JWT).
-*   **403 Forbidden**: The client is authenticated, but does not have permission to perform the requested action (e.g., a 'user' trying to create a comment).
-*   **404 Not Found**: The requested resource could not be found.
-*   **500 Internal Server Error**: A generic error message, given when an unexpected condition was encountered.
+*   **200 OK**: Запрос выполнен успешно (например, для `GET`, `PATCH`).
+*   **201 Created**: Ресурс был успешно создан (например, для `POST`).
+*   **204 No Content**: Запрос выполнен успешно, но нет содержимого для возврата (например, для `DELETE`).
+*   **400 Bad Request**: Сервер не может обработать запрос из-за ошибки клиента (например, неверный `JSON`, ошибка `validation`).
+*   **401 Unauthorized**: Запрос требует `authentication`, а клиент не аутентифицирован (например, отсутствует или недействителен `JWT`).
+*   **403 Forbidden**: Клиент аутентифицирован, но не имеет разрешения на выполнение запрошенного действия (например, `user` пытается создать `comment`).
+*   **404 Not Found**: Запрошенный ресурс не найден.
+*   **409 Conflict**: Запрос не может быть выполнен из-за конфликта с текущим состоянием целевого ресурса (например, `username` уже существует).
+*   **500 Internal Server Error**: Общее сообщение об ошибке, выдаваемое при возникновении непредвиденного условия.
 
 ---
 
-## 1. User Management
+## 1. Управление `User`
 
-### Create a "User" (Can create tasks)
+### Создать `User` (может создавать `tasks`)
 *   **Endpoint:** `POST /users`
-*   **Success Response:** `201 Created`
-*   **Body:**
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `409 Conflict` (если `username` существует)
+*   **Тело запроса (`Body`):**
     ```json
     {
       "username": "testuser",
@@ -33,12 +35,13 @@ This guide provides example JSON payloads and expected response codes for testin
       "role": "user"
     }
     ```
-*Response:* Copy the `id` from the response.
+*Ответ:* Скопируйте `id` из ответа.
 
-### Create an "Author" (Can create comments)
+### Создать `Author` (может создавать `comments`)
 *   **Endpoint:** `POST /users`
-*   **Success Response:** `201 Created`
-*   **Body:**
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `409 Conflict` (если `username` существует)
+*   **Тело запроса (`Body`):**
     ```json
     {
       "username": "testauthor",
@@ -46,25 +49,37 @@ This guide provides example JSON payloads and expected response codes for testin
       "role": "author"
     }
     ```
-*Response:* Copy the `id` from the response.
+*Ответ:* Скопируйте `id` из ответа.
 
-### Login
+### Вход в систему (`Login`)
 *   **Endpoint:** `POST /auth/login`
-*   **Success Response:** `201 Created`
-*   **Error Responses:** `401 Unauthorized`
-*   **Body:**
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `401 Unauthorized`
+*   **Тело запроса (`Body`):**
     ```json
     {
-      "username": "<YOUR_USER_OR_AUTHOR_USERNAME>",
+      "username": "<ВАШ_USER_ИЛИ_AUTHOR_USERNAME>",
       "password": "password123"
     }
     ```
-*Response:* Copy the `access_token`. You will need this for the `Authorization` header (`Bearer <access_token>`) for protected endpoints.
+*Ответ:* Скопируйте `access_token` и `refresh_token`. Вам понадобится `access_token` для заголовка `Authorization` (`Bearer <access_token>`) для защищенных `endpoints`.
 
-### Update User
+### Обновить `Token` (`Refresh Token`)
+*   **Endpoint:** `POST /auth/refresh`
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `401 Unauthorized`
+*   **Тело запроса (`Body`):**
+    ```json
+    {
+      "refreshToken": "<ВАШ_REFRESH_TOKEN>"
+    }
+    ```
+*Ответ:* Новый `access_token` и `refresh_token`.
+
+### Обновить `User`
 *   **Endpoint:** `PATCH /users/:id`
-*   **Success Response:** `200 OK`
-*   **Body:**
+*   **Успешный ответ:** `200 OK`
+*   **Тело запроса (`Body`):**
     ```json
     {
       "password": "newpassword123"
@@ -73,77 +88,77 @@ This guide provides example JSON payloads and expected response codes for testin
 
 ---
 
-## 2. Tasks (Requires "User" Role Token)
+## 2. `Tasks` (Требуется `Token` с ролью `User`)
 
-### Create a Task
+### Создать `Task`
 *   **Endpoint:** `POST /tasks`
-*   **Success Response:** `201 Created`
-*   **Error Responses:** `401 Unauthorized`, `403 Forbidden`
-*   **Headers:** `Authorization: Bearer <USER_ACCESS_TOKEN>`
-*   **Body:**
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `401 Unauthorized`, `403 Forbidden`
+*   **Заголовки (`Headers`):** `Authorization: Bearer <USER_ACCESS_TOKEN>`
+*   **Тело запроса (`Body`):**
     ```json
     {
-      "description": "Fix the login bug on the homepage."
+      "description": "Исправить ошибку входа на главной странице."
     }
     ```
-*Response:* Copy the `id` (Task ID) for creating comments.
+*Ответ:* Скопируйте `id` (`Task ID`) для создания `comments`.
 
-### Update a Task
+### Обновить `Task`
 *   **Endpoint:** `PATCH /tasks/:id`
-*   **Success Response:** `200 OK`
-*   **Error Responses:** `401 Unauthorized`, `403 Forbidden`, `404 Not Found`
-*   **Headers:** `Authorization: Bearer <USER_ACCESS_TOKEN>`
-*   **Body:**
+*   **Успешный ответ:** `200 OK`
+*   **Ответы об ошибках:** `401 Unauthorized`, `403 Forbidden`, `404 Not Found`
+*   **Заголовки (`Headers`):** `Authorization: Bearer <USER_ACCESS_TOKEN>`
+*   **Тело запроса (`Body`):**
     ```json
     {
-      "description": "Fix the login bug on the homepage (Urgent)."
+      "description": "Исправить ошибку входа на главной странице (Срочно)."
     }
     ```
 
 ---
 
-## 3. Comments (Requires "Author" Role Token)
+## 3. `Comments` (Требуется `Token` с ролью `Author`)
 
-### Create a Comment
+### Создать `Comment`
 *   **Endpoint:** `POST /comments`
-*   **Success Response:** `201 Created`
-*   **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`
-*   **Headers:** `Authorization: Bearer <AUTHOR_ACCESS_TOKEN>`
-*   **Body:**
+*   **Успешный ответ:** `201 Created`
+*   **Ответы об ошибках:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`
+*   **Заголовки (`Headers`):** `Authorization: Bearer <AUTHOR_ACCESS_TOKEN>`
+*   **Тело запроса (`Body`):**
     ```json
     {
-      "text": "I have started working on this.",
-      "task_id": "<TASK_ID_FROM_PREVIOUS_STEP>"
+      "text": "Я начал работать над этим.",
+      "task_id": "<TASK_ID_ИЗ_ПРЕДЫДУЩЕГО_ШАГА>"
     }
     ```
 
-### Update a Comment
+### Обновить `Comment`
 *   **Endpoint:** `PATCH /comments/:id`
-*   **Success Response:** `200 OK`
-*   **Error Responses:** `401 Unauthorized`, `403 Forbidden`, `404 Not Found`
-*   **Headers:** `Authorization: Bearer <AUTHOR_ACCESS_TOKEN>`
-*   **Body:**
+*   **Успешный ответ:** `200 OK`
+*   **Ответы об ошибках:** `401 Unauthorized`, `403 Forbidden`, `404 Not Found`
+*   **Заголовки (`Headers`):** `Authorization: Bearer <AUTHOR_ACCESS_TOKEN>`
+*   **Тело запроса (`Body`):**
     ```json
     {
-      "text": "I have started working on this. ETA: 2 hours."
+      "text": "Я начал работать над этим. ETA: 2 часа."
     }
     ```
 
 ---
 
-## 4. GET Requests (No Body)
+## 4. `GET` запросы (без тела запроса)
 
-*   **Get All Users:** `GET /users` -> `200 OK`
-*   **Get User by ID:** `GET /users/:id` -> `200 OK` / `404 Not Found`
-*   **Get All Tasks:** `GET /tasks` -> `200 OK`
-*   **Get Task by ID:** `GET /tasks/:id` -> `200 OK` / `404 Not Found`
-*   **Get Comments for a Task:** `GET /comments?task_id=<TASK_ID>` -> `200 OK`
-*   **Get Comment by ID:** `GET /comments/:id` -> `200 OK` / `404 Not Found`
+*   **Получить всех `Users`:** `GET /users` -> `200 OK`
+*   **Получить `User` по `ID`:** `GET /users/:id` -> `200 OK` / `404 Not Found`
+*   **Получить все `Tasks`:** `GET /tasks` -> `200 OK`
+*   **Получить `Task` по `ID`:** `GET /tasks/:id` -> `200 OK` / `404 Not Found`
+*   **Получить `Comments` для `Task`:** `GET /comments?task_id=<TASK_ID>` -> `200 OK`
+*   **Получить `Comment` по `ID`:** `GET /comments/:id` -> `200 OK` / `404 Not Found`
 
 ---
 
-## 5. DELETE Requests (No Body)
+## 5. `DELETE` запросы (без тела запроса)
 
-*   **Delete User:** `DELETE /users/:id` -> `200 OK` / `404 Not Found`
-*   **Delete Task:** `DELETE /tasks/:id` (Requires User Token) -> `200 OK` / `404 Not Found`
-*   **Delete Comment:** `DELETE /comments/:id` (Requires Author Token) -> `200 OK` / `404 Not Found`
+*   **Удалить `User`:** `DELETE /users/:id` -> `200 OK` / `404 Not Found`
+*   **Удалить `Task`:** `DELETE /tasks/:id` (Требуется `Token` `User`) -> `200 OK` / `404 Not Found`
+*   **Удалить `Comment`:** `DELETE /comments/:id` (Требуется `Token` `Author`) -> `200 OK` / `404 Not Found`

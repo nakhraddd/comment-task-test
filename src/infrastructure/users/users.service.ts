@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from '../../domain/entities/user.entity';
+import { CreateUserDto } from '../../components/users/dto/create-user.dto';
+import { UpdateUserDto } from '../../components/users/dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -14,6 +14,11 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.usersRepository.findOneBy({ username: createUserDto.username });
+    if (existingUser) {
+      throw new ConflictException('Username already exists');
+    }
+
     const user = this.usersRepository.create(createUserDto);
     if (user.password) {
       user.password = await bcrypt.hash(user.password, 10);
@@ -44,6 +49,16 @@ export class UsersService {
     }
     this.usersRepository.merge(user, updateUserDto);
     return this.usersRepository.save(user);
+  }
+
+  async updateRefreshToken(id: string, refreshToken: string | null): Promise<void> {
+    const user = await this.findOne(id);
+    if (refreshToken) {
+      user.refreshToken = await bcrypt.hash(refreshToken, 10);
+    } else {
+      user.refreshToken = null;
+    }
+    await this.usersRepository.save(user);
   }
 
   async remove(id: string): Promise<void> {

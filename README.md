@@ -1,52 +1,51 @@
 # Task Comments API
 
-## Description
-This is a REST API module for a CRM system that handles task comments. It is built using NestJS, TypeORM, PostgreSQL, and TypeScript.
+## Описание
+Это модуль `REST API` для `CRM` системы, который обрабатывает комментарии к задачам. Он построен с использованием `NestJS`, `TypeORM`, `PostgreSQL` и `TypeScript`.
 
-## Launch Instructions
+## Инструкции по запуску
 
-### Prerequisites
-- Docker and Docker Compose
+### Предварительные требования
+- `Docker` и `Docker Compose`
 
-### Steps
-1. Clone the repository.
-2. Run `docker-compose up --build` to build and start the application and database.
+### Шаги
+1. Клонируйте репозиторий.
+2. Запустите `docker-compose up --build`, чтобы собрать и запустить приложение и базу данных.
 
-The API will be available at `http://localhost:3000`.
-Swagger documentation is available at `http://localhost:3000/api`.
+`API` будет доступен по адресу `http://localhost:3000`.
+Документация `Swagger` доступна по адресу `http://localhost:3000/api`.
 
-## Reasons for Actions
-- **NestJS**: Chosen for its modular architecture and TypeScript support, which fits the requirements.
-- **TypeORM**: Used as the ORM to interact with PostgreSQL, providing a clean and easy-to-use API.
-- **PostgreSQL**: The required database for the task.
-- **Docker**: Used to containerize the application and database, ensuring consistent environments.
-- **JWT**: Implemented for user authorization as per the requirements.
-- **Swagger**: Added for API documentation to make it easier to test and understand the endpoints.
+## Обоснование действий
+- **TypeORM**: Используется как `ORM` для взаимодействия с `PostgreSQL`, предоставляя чистый и простой в использовании `API`.
+- **PostgreSQL**: Требуемая база данных для задачи.
+- **Docker**: Используется для контейнеризации приложения и базы данных, обеспечивая согласованность сред.
+- **JWT**: Реализован для авторизации пользователей в соответствии с требованиями.
+- **Swagger**: Добавлен для документации `API`, чтобы упростить тестирование и понимание `endpoints`.
 
 ## Endpoints
-- `POST /users`: Create a user
-- `GET /users/:id`: List users by ID
-- `GET /users/`: Get a list of all users
-- `PATCH /users/:id`: Edit a user
-- `DELETE /users/:id`: Delete a user
-- `POST /auth/login`: Login to get JWT token
-- `POST /tasks`: Create a task (User only)
-- `GET /tasks`: Get a list of all tasks
-- `GET /tasks/:id`: Get a task by ID
-- `PATCH /tasks/:id`: Edit a task (Owner only)
-- `DELETE /tasks/:id`: Delete a task (Owner only)
-- `POST /comments`: Create a comment (Author only)
-- `GET /comments?task_id=...`: Get comments for a task
-- `GET /comments/:id`: Get a comment by ID
-- `PATCH /comments/:id`: Update a comment (Owner only)
-- `DELETE /comments/:id`: Delete a comment (Owner only)
+- `POST /users`: Создать пользователя (`User`)
+- `GET /users/:id`: Получить список пользователей по `ID`
+- `GET /users/`: Получить список всех пользователей
+- `PATCH /users/:id`: Редактировать пользователя
+- `DELETE /users/:id`: Удалить пользователя
+- `POST /auth/login`: Войти в систему для получения `JWT token`
+- `POST /tasks`: Создать задачу (`Task`) (Только `User`)
+- `GET /tasks`: Получить список всех задач
+- `GET /tasks/:id`: Получить задачу по `ID`
+- `PATCH /tasks/:id`: Редактировать задачу (Только владелец)
+- `DELETE /tasks/:id`: Удалить задачу (Только владелец)
+- `POST /comments`: Создать комментарий (`Comment`) (Только `Author`)
+- `GET /comments?task_id=...`: Получить комментарии для задачи
+- `GET /comments/:id`: Получить комментарий по `ID`
+- `PATCH /comments/:id`: Обновить комментарий (Только владелец)
+- `DELETE /comments/:id`: Удалить комментарий (Только владелец)
 
-## Business Rules
-- Only the user can edit or delete a comment.
-- Comment text is required (1-1000 characters).
-- Comments are returned sorted by date (newest first).
-- Only the author can create a comment.
-- Only the user can create a task.
-- Only the user of a task can edit or delete it.
-- Tasks are returned sorted by date (newest first).
-- Each task can have multiple comments, and a comment can only be linked to one task.
+## Бизнес-правила
+- Только пользователь может редактировать или удалять комментарий.
+- Текст комментария обязателен (1-1000 символов).
+- Комментарии возвращаются отсортированными по дате (сначала новые).
+- Только автор (`Author`) может создать комментарий.
+- Только пользователь (`User`) может создать задачу.
+- Только пользователь задачи может редактировать или удалять ее.
+- Задачи возвращаются отсортированными по дате (сначала новые).
+- Каждая задача может иметь несколько комментариев, и комментарий может быть связан только с одной задачей.

@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Comment } from './entities/comment.entity';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
-import { User } from '../users/entities/user.entity';
-import { Task } from '../tasks/entities/task.entity';
+import { Comment } from '../../domain/entities/comment.entity';
+import { CreateCommentDto } from '../../components/comments/dto/create-comment.dto';
+import { UpdateCommentDto } from '../../components/comments/dto/update-comment.dto';
+import { User } from '../../domain/entities/user.entity';
+import { Task } from '../../domain/entities/task.entity';
 
 @Injectable()
 export class CommentsService {

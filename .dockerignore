@@ -4,4 +4,6 @@ dist
 .idea
 Dockerfile
 docker-compose.yml
+README_EN.md
 README.md
+

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { Comment } from '../../comments/entities/comment.entity';
-import { Task } from '../../tasks/entities/task.entity';
+import { Comment } from './comment.entity';
+import { Task } from './task.entity';
 
 @Entity()
 export class User {
@@ -15,6 +15,9 @@ export class User {
 
   @Column()
   role: string;
+
+  @Column({ nullable: true })
+  refreshToken?: string; // Add refresh token field
 
   @OneToMany(() => Task, task => task.user)
   tasks: Task[];
