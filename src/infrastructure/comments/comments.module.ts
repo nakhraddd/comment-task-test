@@ -4,11 +4,18 @@ import { CommentsService } from './comments.service';
 import { CommentsController } from './comments.controller';
 import { Comment } from '../../domain/entities/comment.entity';
 import { Task } from '../../domain/entities/task.entity';
-import { UsersModule } from '../users/users.module';
+import { ICommentRepository } from './comments.repository.interface';
+import { CommentsRepository } from './comments.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Comment, Task]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Comment, Task])],
   controllers: [CommentsController],
-  providers: [CommentsService],
+  providers: [
+    CommentsService,
+    {
+      provide: ICommentRepository,
+      useClass: CommentsRepository,
+    },
+  ],
 })
 export class CommentsModule {}

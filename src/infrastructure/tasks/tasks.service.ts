@@ -1,61 +1,34 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { Task } from '../../domain/entities/task.entity';
 import { CreateTaskDto } from '../../components/tasks/dto/create-task.dto';
 import { UpdateTaskDto } from '../../components/tasks/dto/update-task.dto';
 import { User } from '../../domain/entities/user.entity';
+import { ITaskRepository } from './tasks.repository.interface';
 
 @Injectable()
 export class TasksService {
   constructor(
-    @InjectRepository(Task)
-    private tasksRepository: Repository<Task>,
+    @Inject(ITaskRepository)
+    private readonly tasksRepository: ITaskRepository,
   ) {}
 
-  async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
-    if (user.role !== 'user') {
-      throw new ForbiddenException('Only users can create tasks');
-    }
-    const task = this.tasksRepository.create({
-      ...createTaskDto,
-      user,
-    });
-    return this.tasksRepository.save(task);
+  create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this.tasksRepository.create(createTaskDto, user);
   }
 
   findAll(): Promise<Task[]> {
-    return this.tasksRepository.find({
-      order: { created_at: 'DESC' },
-      relations: ['user', 'comments'],
-    });
+    return this.tasksRepository.findAll();
   }
 
-  async findOne(id: string): Promise<Task> {
-    const task = await this.tasksRepository.findOne({
-      where: { id },
-      relations: ['user', 'comments'],
-    });
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-    return task;
+  findOne(id: string): Promise<Task> {
+    return this.tasksRepository.findById(id);
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto, user: User): Promise<Task> {
-    const task = await this.findOne(id);
-    if (task.user.id !== user.id) {
-      throw new ForbiddenException('You can only edit your own tasks');
-    }
-    this.tasksRepository.merge(task, updateTaskDto);
-    return this.tasksRepository.save(task);
+  update(id: string, updateTaskDto: UpdateTaskDto, user: User): Promise<Task> {
+    return this.tasksRepository.update(id, updateTaskDto, user);
   }
 
-  async remove(id: string, user: User): Promise<void> {
-    const task = await this.findOne(id);
-    if (task.user.id !== user.id) {
-      throw new ForbiddenException('You can only delete your own tasks');
-    }
-    await this.tasksRepository.remove(task);
+  remove(id: string, user: User): Promise<void> {
+    return this.tasksRepository.remove(id, user);
   }
 }

@@ -7,17 +7,27 @@ import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { AuthController } from './auth.controller';
+import { ITokenService } from './token.service.interface';
+import { JwtTokenService } from './jwt.token.service';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: 'SECRET_KEY', // Use a more secure key in a real application
-      signOptions: { expiresIn: '60m' },
+      secret: 'SECRET_KEY',
     }),
   ],
-  providers: [AuthService, JwtStrategy, LocalStrategy, JwtRefreshStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    LocalStrategy,
+    JwtRefreshStrategy,
+    {
+      provide: ITokenService,
+      useClass: JwtTokenService,
+    },
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

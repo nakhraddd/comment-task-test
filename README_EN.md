@@ -16,12 +16,12 @@ The API will be available at `http://localhost:3000`.
 Swagger documentation is available at `http://localhost:3000/api`.
 
 ## Reasons for Actions
-- **NestJS**: Chosen for its modular architecture and TypeScript support, which fits the requirements.
-- **TypeORM**: Used as the ORM to interact with PostgreSQL, providing a clean and easy-to-use API.
-- **PostgreSQL**: The required database for the task.
-- **Docker**: Used to containerize the application and database, ensuring consistent environments.
-- **JWT**: Implemented for user authorization as per the requirements.
-- **Swagger**: Added for API documentation to make it easier to test and understand the endpoints.
+- **Clean Architecture**: The project is structured using Clean Architecture principles to separate concerns, making the codebase more maintainable, testable, and scalable. The core business logic is isolated from external frameworks and libraries.
+- **Repository Pattern**: Used to decouple the business logic from the data access layer. This allows for easier swapping of data sources and better unit testing of the service layer.
+- **Dependency Injection**: Utilized throughout the application to manage dependencies, promoting loose coupling and easier testing.
+- **DTOs (Data Transfer Objects)**: Implemented to define the shape of data being sent over the network and to perform validation using `class-validator`, ensuring data integrity before it reaches the business logic.
+- **JWT Strategy**: Employed for secure stateless authentication. A refresh token mechanism is also implemented to enhance security and user experience.
+- **SOLID Principles**: Applied to ensure that classes and modules have single responsibilities, are open for extension but closed for modification, and depend on abstractions rather than concretions.
 
 ## Endpoints
 - `POST /users`: Create a user

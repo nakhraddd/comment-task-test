@@ -1,13 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { ITokenService, ITokens } from './token.service.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService
+    private readonly usersService: UsersService,
+    @Inject(ITokenService)
+    private readonly tokenService: ITokenService,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
@@ -19,20 +20,14 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
+  async login(user: any): Promise<ITokens> {
     const payload = { username: user.username, sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '60m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' }); // Refresh token expires in 7 days
-
-    await this.usersService.updateRefreshToken(user.id, refreshToken);
-
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    };
+    const tokens = await this.tokenService.generateTokens(payload);
+    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    return tokens;
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
+  async refreshTokens(userId: string, refreshToken: string): Promise<ITokens> {
     const user = await this.usersService.findOne(userId);
     if (!user || !user.refreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -44,14 +39,8 @@ export class AuthService {
     }
 
     const payload = { username: user.username, sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '60m' });
-    const newRefreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-
-    await this.usersService.updateRefreshToken(user.id, newRefreshToken);
-
-    return {
-      access_token: accessToken,
-      refresh_token: newRefreshToken,
-    };
+    const tokens = await this.tokenService.generateTokens(payload);
+    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    return tokens;
   }
 }

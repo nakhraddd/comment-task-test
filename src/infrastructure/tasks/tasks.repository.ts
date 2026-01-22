@@ -1,0 +1,62 @@
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Task } from '../../domain/entities/task.entity';
+import { CreateTaskDto } from '../../components/tasks/dto/create-task.dto';
+import { UpdateTaskDto } from '../../components/tasks/dto/update-task.dto';
+import { User } from '../../domain/entities/user.entity';
+import { ITaskRepository } from './tasks.repository.interface';
+
+@Injectable()
+export class TasksRepository implements ITaskRepository {
+  constructor(
+    @InjectRepository(Task)
+    private readonly tasksRepository: Repository<Task>,
+  ) {}
+
+  async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    if (user.role !== 'user') {
+      throw new ForbiddenException('Only users can create tasks');
+    }
+    const task = this.tasksRepository.create({
+      ...createTaskDto,
+      user,
+    });
+    return this.tasksRepository.save(task);
+  }
+
+  async findAll(): Promise<Task[]> {
+    return this.tasksRepository.find({
+      order: { created_at: 'DESC' },
+      relations: ['user', 'comments'],
+    });
+  }
+
+  async findById(id: string): Promise<Task | null> {
+    const task = await this.tasksRepository.findOne({
+      where: { id },
+      relations: ['user', 'comments'],
+    });
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+    return task;
+  }
+
+  async update(id: string, updateTaskDto: UpdateTaskDto, user: User): Promise<Task> {
+    const task = await this.findById(id);
+    if (task.user.id !== user.id) {
+      throw new ForbiddenException('You can only edit your own tasks');
+    }
+    this.tasksRepository.merge(task, updateTaskDto);
+    return this.tasksRepository.save(task);
+  }
+
+  async remove(id: string, user: User): Promise<void> {
+    const task = await this.findById(id);
+    if (task.user.id !== user.id) {
+      throw new ForbiddenException('You can only delete your own tasks');
+    }
+    await this.tasksRepository.remove(task);
+  }
+}
